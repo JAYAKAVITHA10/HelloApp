@@ -15,38 +15,46 @@ const io = new Server(server, {
   cors: { origin: "http://localhost:5173", methods: ["GET", "POST"] }
 });
 
-// ✅ Middleware
+// Middleware
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 
-// ✅ Routes
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
 
-// ✅ Connect to MongoDB
-mongoose
-  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => {
-    console.error("❌ MongoDB Connection Error:", err);
-    process.exit(1);
-  });
+  .catch((err) => console.error("❌ MongoDB Connection Error:", err));
 
-// ✅ Handle WebSocket Messaging
+// Store online users
+const onlineUsers = new Map();
+
 io.on("connection", (socket) => {
   console.log("⚡ User Connected:", socket.id);
+  
+  socket.on("join", (userId) => {
+    onlineUsers.set(userId, socket.id);
+    socket.join(userId);
+  });
 
   socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
     const newMessage = new Message({ senderId, receiverId, message });
     await newMessage.save();
-    io.emit("receiveMessage", newMessage);
+    
+    if (onlineUsers.has(receiverId)) {
+      io.to(onlineUsers.get(receiverId)).emit("receiveMessage", newMessage);
+    }
   });
 
   socket.on("disconnect", () => {
     console.log("❌ User Disconnected:", socket.id);
+    onlineUsers.forEach((value, key) => {
+      if (value === socket.id) onlineUsers.delete(key);
+    });
   });
 });
 
-// ✅ Start Server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
