@@ -30,7 +30,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// ✅ LOGIN USER
+// ✅ LOGIN USER (SECURE)
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -41,7 +41,9 @@ router.post("/login", async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ error: "User not found. Please register first." });
+      return res
+        .status(401)
+        .json({ error: "User not found. Please register first." });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -49,23 +51,17 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid password. Try again." });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
-    res.json({ token, user: { _id: user._id, username: user.username, email: user.email } });
+    res.json({
+      token,
+      user: { _id: user._id, username: user.username, email: user.email },
+    });
   } catch (error) {
     console.error("❌ Login Error:", error);
     res.status(500).json({ error: "Login failed. Please try again later." });
-  }
-});
-
-// ✅ Fetch all users except the logged-in user
-router.get("/users/:userId", async (req, res) => {
-  try {
-    const users = await User.find({ _id: { $ne: req.params.userId } }, "_id username email");
-    res.json(users);
-  } catch (error) {
-    console.error("❌ Error Fetching Users:", error);
-    res.status(500).json({ error: "Failed to fetch users" });
   }
 });
 

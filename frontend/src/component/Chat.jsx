@@ -23,15 +23,22 @@ const Chat = () => {
 
   useEffect(() => {
     if (!user) return;
-    axios.get(`http://localhost:5000/api/auth/users/${user._id}`).then(res => {
-      const sortedUsers = res.data.sort((a, b) => a.username.localeCompare(b.username));
-      setUsers(sortedUsers);
-    });
+    axios
+      .get(`http://localhost:5000/api/auth/users/${user._id}`)
+      .then((res) => {
+        const sortedUsers = res.data.sort((a, b) =>
+          a.username.localeCompare(b.username)
+        );
+        setUsers(sortedUsers);
+      });
   }, [user]);
 
   useEffect(() => {
     socket.on("receiveMessage", (newMessage) => {
-      if (newMessage.senderId === receiver || newMessage.receiverId === user._id) {
+      if (
+        newMessage.senderId === receiver ||
+        newMessage.receiverId === user._id
+      ) {
         setMessages((prev) => [...prev, newMessage]);
       }
     });
@@ -40,7 +47,9 @@ const Chat = () => {
 
   const loadMessages = async (receiverId) => {
     setReceiver(receiverId);
-    const res = await axios.get(`http://localhost:5000/api/chat/${user._id}/${receiverId}`);
+    const res = await axios.get(
+      `http://localhost:5000/api/chat/${user._id}/${receiverId}`
+    );
     setMessages(res.data);
   };
 
@@ -53,11 +62,18 @@ const Chat = () => {
   };
 
   return (
-    <div className={`flex h-screen ${darkMode ? "dark bg-gray-900 text-white" : "bg-gray-100 text-gray-900"}`}>
+    <div
+      className={`flex h-screen ${
+        darkMode ? "dark bg-gray-900 text-white" : "bg-gray-100 text-gray-900"
+      }`}
+    >
       <div className="w-1/4 border-r p-4 bg-white dark:bg-gray-800">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-bold text-lg">Chats</h2>
-          <button onClick={() => setDarkMode(!darkMode)} className="p-2 bg-gray-300 dark:bg-gray-600 rounded">
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="p-2 bg-gray-300 dark:bg-gray-600 rounded"
+          >
             {darkMode ? "🌙" : "☀️"}
           </button>
         </div>
@@ -67,7 +83,9 @@ const Chat = () => {
               key={u._id}
               onClick={() => loadMessages(u._id)}
               className={`flex items-center w-full p-3 rounded-lg transition ${
-                receiver === u._id ? "bg-blue-500 text-white" : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                receiver === u._id
+                  ? "bg-blue-500 text-white"
+                  : "hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
             >
               <span className="mr-2 text-lg">🔵</span> {u.username}
@@ -82,7 +100,8 @@ const Chat = () => {
         {receiver ? (
           <>
             <h2 className="font-bold text-lg mb-2">
-              Chat with {users.find((u) => u._id === receiver)?.username || "User"}
+              Chat with{" "}
+              {users.find((u) => u._id === receiver)?.username || "User"}
             </h2>
             <div className="flex-1 border p-4 mb-2 overflow-auto bg-white dark:bg-gray-800 rounded-lg">
               {messages.map((msg, index) => (
@@ -106,7 +125,10 @@ const Chat = () => {
                 className="flex-1 border p-2 rounded-lg dark:bg-gray-700 dark:text-white"
                 placeholder="Type a message..."
               />
-              <button onClick={sendMessage} className="ml-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">
+              <button
+                onClick={sendMessage}
+                className="ml-2 bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600"
+              >
                 Send
               </button>
             </div>
