@@ -7,6 +7,7 @@ const dotenv = require("dotenv");
 const authRoutes = require("./routes/authRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const Message = require("./models/Message");
+const Group = require("./models/Group");
 
 dotenv.config();
 const app = express();
@@ -40,26 +41,39 @@ io.on("connection", (socket) => {
     socket.join(userId);
   });
 
-  socket.on("sendMessage", async ({ senderId, receiverId, message }) => {
-    const newMessage = new Message({
-      senderId,
-      receiverId,
-      message,
-      seen: false,
-    });
-    await newMessage.save();
+  // ✅ Handle Private Messages
+  socket.on(
+    "sendMessage",
+    async ({ senderId, receiverId, message, groupId }) => {
+      const newMessage = new Message({
+        senderId,
+        receiverId,
+        groupId,
+        message,
+        seen: false,
+      });
+      await newMessage.save();
 
-    if (onlineUsers.has(receiverId)) {
-      io.to(onlineUsers.get(receiverId)).emit("receiveMessage", newMessage);
+      if (groupId) {
+        io.to(groupId).emit("receiveMessage", newMessage);
+      } else if (onlineUsers.has(receiverId)) {
+        io.to(onlineUsers.get(receiverId)).emit("receiveMessage", newMessage);
+      }
     }
+  );
+
+  // ✅ Handle Group Chats
+  socket.on("joinGroup", (groupId) => {
+    socket.join(groupId);
   });
 
+  // ✅ Mark Messages as Seen
   socket.on("messageSeen", async ({ messageId }) => {
     await Message.findByIdAndUpdate(messageId, { seen: true });
+    io.emit("updateMessageStatus", { messageId, seen: true });
   });
 
   socket.on("disconnect", () => {
-    console.log("❌ User Disconnected:", socket.id);
     onlineUsers.forEach((value, key) => {
       if (value === socket.id) onlineUsers.delete(key);
     });
