@@ -19,6 +19,7 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (email, password) => {
     try {
+<<<<<<< HEAD
       const response = await axios.post(
         "http://localhost:5000/api/auth/login",
         { email, password }
@@ -29,6 +30,19 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("user", JSON.stringify(userData)); // Save user to localStorage
 
       return { success: true, message: response.data.message };
+=======
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
+        email,
+        password,
+      });
+
+      if (res.data.user) {
+        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        setUser(res.data.user);
+        navigate("/chat");
+      }
+>>>>>>> 58e0dd3ea758086083fe3a3060a268196ced1986
     } catch (error) {
       return {
         success: false,
@@ -37,6 +51,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+<<<<<<< HEAD
   // Logout function
   const logout = () => {
     setUser(null);
@@ -45,6 +60,10 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, login, logout, loading }}>
+=======
+  return (
+    <AuthContext.Provider value={{ user, login }}>
+>>>>>>> 58e0dd3ea758086083fe3a3060a268196ced1986
       {children}
     </AuthContext.Provider>
   );

@@ -36,7 +36,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// ✅ LOGIN USER
+// ✅ LOGIN USER (SECURE)
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -48,7 +48,13 @@ router.post("/login", async (req, res) => {
     // ✅ Find user by email
     const user = await User.findOne({ email });
     if (!user) {
+<<<<<<< HEAD
       return res.status(400).json({ error: "User not found" });
+=======
+      return res
+        .status(401)
+        .json({ error: "User not found. Please register first." });
+>>>>>>> 58e0dd3ea758086083fe3a3060a268196ced1986
     }
 
     // ✅ Check password
@@ -57,15 +63,28 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid password" });
     }
 
+<<<<<<< HEAD
     // ✅ Generate JWT Token
+=======
+>>>>>>> 58e0dd3ea758086083fe3a3060a268196ced1986
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
+<<<<<<< HEAD
     res.json({ message: "Login successful", token, user });
   } catch (error) {
     console.error("❌ Login Error:", error);
     res.status(500).json({ error: "Server error during login" });
+=======
+    res.json({
+      token,
+      user: { _id: user._id, username: user.username, email: user.email },
+    });
+  } catch (error) {
+    console.error("❌ Login Error:", error);
+    res.status(500).json({ error: "Login failed. Please try again later." });
+>>>>>>> 58e0dd3ea758086083fe3a3060a268196ced1986
   }
 });
 
